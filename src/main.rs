@@ -10,10 +10,7 @@ struct FwLegacyBinDesc {
 }
 
 impl FwLegacyBinDesc {
-    pub fn from_reader<T>(r: &mut T) -> Self
-    where
-        T: std::io::Read,
-    {
+    pub fn from_reader<T: std::io::Read>(r: &mut T) -> Self {
         Self {
             _ver: r.read_u32::<LittleEndian>().unwrap(),
             off: r.read_u32::<LittleEndian>().unwrap(),
@@ -32,10 +29,7 @@ struct PspTaFw {
 }
 
 impl PspTaFw {
-    pub fn from_reader<T>(r: &mut T) -> Self
-    where
-        T: std::io::Read,
-    {
+    pub fn from_reader<T: std::io::Read>(r: &mut T) -> Self {
         Self {
             xgmi: FwLegacyBinDesc::from_reader(r),
             ras: FwLegacyBinDesc::from_reader(r),
@@ -47,110 +41,80 @@ impl PspTaFw {
 }
 
 fn main() {
-    let type_ = std::env::args().nth(1).unwrap();
-    let fw = std::env::args().nth(2).unwrap();
+    let ty = std::env::args().nth(1).unwrap();
+    let input = std::env::args().nth(2).unwrap();
     let output = std::env::args().nth(3).unwrap();
-    let fw = std::fs::read(fw).unwrap();
-    let mut c = std::io::Cursor::new(fw);
+
+    let mut c = std::io::Cursor::new(std::fs::read(input).unwrap());
     c.set_position(20);
-    let ucode_size = c.read_u32::<LittleEndian>().unwrap();
-    let ucode_off = c.read_u32::<LittleEndian>().unwrap();
+    let ucode_size = c.read_u32::<LittleEndian>().unwrap() as usize;
+    let ucode_off = c.read_u32::<LittleEndian>().unwrap() as u64;
     c.seek(SeekFrom::Current(4)).unwrap();
-    match type_.to_lowercase().as_str() {
-        "psp_xgmi" => {
+
+    match ty.as_str() {
+        "xgmi" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            println!("{:#x?}", ta_fw);
-            if ta_fw.xgmi.size == 0 {
-                eprintln!("XGMI size 0!");
-                return;
-            }
-            c.set_position(ucode_off as u64 + ta_fw.xgmi.off as u64);
-            let mut buf = Vec::new();
-            buf.resize(ta_fw.xgmi.size as usize, 0);
+            assert_ne!(ta_fw.xgmi.off, 0);
+            assert_ne!(ta_fw.xgmi.size, 0);
+            c.set_position(ucode_off + ta_fw.xgmi.off as u64);
+            let mut buf = vec![0; ta_fw.xgmi.size as usize];
             c.read_exact(buf.as_mut_slice()).unwrap();
-            println!("Saving PSP XGMI to {}", output);
             std::fs::write(output, buf).unwrap();
         }
-        "psp_ras" => {
+        "ras" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            println!("{:#x?}", ta_fw);
-            if ta_fw.ras.size == 0 {
-                eprintln!("RAS size 0!");
-                return;
-            }
-            c.set_position(ucode_off as u64 + ta_fw.ras.off as u64);
-            let mut buf = Vec::new();
-            buf.resize(ta_fw.ras.size as usize, 0);
+            assert_ne!(ta_fw.ras.off, 0);
+            assert_ne!(ta_fw.ras.size, 0);
+            c.set_position(ucode_off + ta_fw.ras.off as u64);
+            let mut buf = vec![0; ta_fw.ras.size as usize];
             c.read_exact(buf.as_mut_slice()).unwrap();
-            println!("Saving PSP RAS to {}", output);
             std::fs::write(output, buf).unwrap();
         }
-        "psp_hdcp" => {
+        "hdcp" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            println!("{:#x?}", ta_fw);
-            if ta_fw.hdcp.size == 0 {
-                eprintln!("HDCP size 0!");
-                return;
-            }
-            c.set_position(ucode_off as u64 + ta_fw.hdcp.off as u64);
-            let mut buf = Vec::new();
-            buf.resize(ta_fw.hdcp.size as usize, 0);
+            assert_ne!(ta_fw.hdcp.off, 0);
+            assert_ne!(ta_fw.hdcp.size, 0);
+            c.set_position(ucode_off + ta_fw.hdcp.off as u64);
+            let mut buf = vec![0; ta_fw.hdcp.size as usize];
             c.read_exact(buf.as_mut_slice()).unwrap();
-            println!("Saving PSP HDCP to {}", output);
             std::fs::write(output, buf).unwrap();
         }
-        "psp_dtm" => {
+        "dtm" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            println!("{:#x?}", ta_fw);
-            if ta_fw.dtm.size == 0 {
-                eprintln!("DTM size 0!");
-                return;
-            }
-            c.set_position(ucode_off as u64 + ta_fw.dtm.off as u64);
-            let mut buf = Vec::new();
-            buf.resize(ta_fw.dtm.size as usize, 0);
+            assert_ne!(ta_fw.dtm.off, 0);
+            assert_ne!(ta_fw.dtm.size, 0);
+            c.set_position(ucode_off + ta_fw.dtm.off as u64);
+            let mut buf = vec![0; ta_fw.dtm.size as usize];
             c.read_exact(buf.as_mut_slice()).unwrap();
-            println!("Saving PSP DTM to {}", output);
             std::fs::write(output, buf).unwrap();
         }
-        "psp_secure_display" => {
+        "secure_display" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            println!("{:#x?}", ta_fw);
-            if ta_fw.secure_display.size == 0 {
-                eprintln!("Secure Display size 0!");
-                return;
-            }
-            c.set_position(ucode_off as u64 + ta_fw.secure_display.off as u64);
-            let mut buf = Vec::new();
-            buf.resize(ta_fw.secure_display.size as usize, 0);
+            assert_ne!(ta_fw.secure_display.off, 0);
+            assert_ne!(ta_fw.secure_display.size, 0);
+            c.set_position(ucode_off + ta_fw.secure_display.off as u64);
+            let mut buf = vec![0; ta_fw.secure_display.size as usize];
             c.read_exact(buf.as_mut_slice()).unwrap();
-            println!("Saving PSP Secure Display to {}", output);
             std::fs::write(output, buf).unwrap();
         }
-        "psp_asd" => {
-            c.set_position(ucode_off as u64);
-            let mut buf = Vec::new();
-            buf.resize(ucode_size as usize, 0);
+        "asd" => {
+            c.set_position(ucode_off);
+            let mut buf = vec![0; ucode_size];
             c.read_exact(buf.as_mut_slice()).unwrap();
-            println!("Saving PSP ASD to {}", output);
             std::fs::write(output, buf).unwrap();
         }
         "gfx" => {
             c.seek(SeekFrom::Current(4)).unwrap();
-            let jt_off = c.read_u32::<LittleEndian>().unwrap();
-            let jt_size = c.read_u32::<LittleEndian>().unwrap();
-            c.set_position(ucode_off as u64);
-            let mut buf = Vec::new();
-            buf.resize(ucode_size as usize, 0);
+            let jt_off = c.read_u32::<LittleEndian>().unwrap() as u64;
+            let jt_size = c.read_u32::<LittleEndian>().unwrap() as usize * 4;
+            c.set_position(ucode_off);
+            let mut buf = vec![0; ucode_size];
             c.read_exact(buf.as_mut_slice()).unwrap();
-            println!("Saving GFX to {}", output);
             std::fs::write(&output, buf).unwrap();
-            if jt_off != 0 {
-                c.set_position(jt_off as u64);
-                let mut buf = Vec::new();
-                buf.resize(jt_size as usize, 0);
+            if jt_off != 0 && jt_size != 0 {
+                c.set_position(jt_off);
+                let mut buf = vec![0; jt_size];
                 c.read_exact(buf.as_mut_slice()).unwrap();
-                println!("Saving GFX JT to {}.jt", output);
                 std::fs::write(output + ".jt", buf).unwrap();
             }
         }
