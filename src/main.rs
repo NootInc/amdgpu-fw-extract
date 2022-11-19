@@ -135,6 +135,25 @@ fn main() {
             println!("Saving PSP ASD to {}", output);
             std::fs::write(output, buf).unwrap();
         }
+        "gfx" => {
+            c.seek(SeekFrom::Current(4)).unwrap();
+            let jt_off = c.read_u32::<LittleEndian>().unwrap();
+            let jt_size = c.read_u32::<LittleEndian>().unwrap();
+            c.set_position(ucode_off as u64);
+            let mut buf = Vec::new();
+            buf.resize(ucode_size as usize, 0);
+            c.read_exact(buf.as_mut_slice()).unwrap();
+            println!("Saving GFX to {}", output);
+            std::fs::write(&output, buf).unwrap();
+            if jt_off != 0 {
+                c.set_position(jt_off as u64);
+                let mut buf = Vec::new();
+                buf.resize(jt_size as usize, 0);
+                c.read_exact(buf.as_mut_slice()).unwrap();
+                println!("Saving GFX JT to {}.jt", output);
+                std::fs::write(output + ".jt", buf).unwrap();
+            }
+        }
         v => eprintln!("Unknown firmware type '{}'", v),
     }
 }
