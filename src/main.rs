@@ -119,14 +119,12 @@ fn main() {
             ];
             c.read_exact(buf.as_mut_slice()).unwrap();
             std::fs::write(&output, buf).unwrap();
-            if jt_off != 0 && jt_size != 0 {
-                println!("jt_off: {:#X}", jt_off);
-                if mec {
-                    c.set_position(ucode_off + (ucode_size - jt_size) as u64);
-                    let mut buf = vec![0; jt_size];
-                    c.read_exact(buf.as_mut_slice()).unwrap();
-                    std::fs::write(output + ".jt", buf).unwrap();
-                }
+            println!("jt_off: {:#X}", jt_off);
+            if jt_off != 0 && jt_size != 0 && mec {
+                c.set_position(ucode_off + (ucode_size - jt_size) as u64);
+                let mut buf = vec![0; jt_size];
+                c.read_exact(buf.as_mut_slice()).unwrap();
+                std::fs::write(output + ".jt", buf).unwrap();
             }
         }
         v => eprintln!("Unknown firmware type '{}'", v),
