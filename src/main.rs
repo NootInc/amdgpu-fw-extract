@@ -54,7 +54,6 @@ fn main() {
     match ty.as_str() {
         "xgmi" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            assert_ne!(ta_fw.xgmi.off, 0);
             assert_ne!(ta_fw.xgmi.size, 0);
             c.set_position(ucode_off + ta_fw.xgmi.off as u64);
             let mut buf = vec![0; ta_fw.xgmi.size as usize];
@@ -63,7 +62,6 @@ fn main() {
         }
         "ras" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            assert_ne!(ta_fw.ras.off, 0);
             assert_ne!(ta_fw.ras.size, 0);
             c.set_position(ucode_off + ta_fw.ras.off as u64);
             let mut buf = vec![0; ta_fw.ras.size as usize];
@@ -72,7 +70,6 @@ fn main() {
         }
         "hdcp" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            assert_ne!(ta_fw.hdcp.off, 0);
             assert_ne!(ta_fw.hdcp.size, 0);
             c.set_position(ucode_off + ta_fw.hdcp.off as u64);
             let mut buf = vec![0; ta_fw.hdcp.size as usize];
@@ -81,7 +78,6 @@ fn main() {
         }
         "dtm" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            assert_ne!(ta_fw.dtm.off, 0);
             assert_ne!(ta_fw.dtm.size, 0);
             c.set_position(ucode_off + ta_fw.dtm.off as u64);
             let mut buf = vec![0; ta_fw.dtm.size as usize];
@@ -90,7 +86,6 @@ fn main() {
         }
         "secure_display" => {
             let ta_fw = PspTaFw::from_reader(&mut c);
-            assert_ne!(ta_fw.secure_display.off, 0);
             assert_ne!(ta_fw.secure_display.size, 0);
             c.set_position(ucode_off + ta_fw.secure_display.off as u64);
             let mut buf = vec![0; ta_fw.secure_display.size as usize];
